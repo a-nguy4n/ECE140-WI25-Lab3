@@ -114,7 +114,8 @@ async def save_count(data: dict):
     global stored_count
     stored_count = data.get("count", 0)
     return JSONResponse({
-        "message": f"Count saved successfully: {stored_count}"
+        "message": f"Count saved successfully: {stored_count}",
+        "count": stored_count
     })
 
 # Add new route for the counter page

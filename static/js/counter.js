@@ -29,8 +29,14 @@ async function saveCounter() {
         
         // Show save status
         saveStatus.textContent = data.message;
-        
-    } catch (error) {
+
+        if(data.count !== undefined){
+            count = data.count;
+            counterDisplay.textContent = count; 
+        }
+    } 
+    
+    catch (error) {
         saveStatus.textContent = 'Error saving count';
         saveStatus.style.color = 'red';
     }
@@ -39,16 +45,67 @@ async function saveCounter() {
 // Initialize counter from server when page loads
 async function initializeCounter() {
     try {
-        
-        count = 0; // get this from the server at /get_count
-        counterDisplay.textContent = count;
-    } catch (error) {
+       
+        const response = await fetch('/get_count');
+        if (!response.ok){
+            throw new Error(`Failed to fetch count: ${response.status}`);
+        }
+
+        const data = await response.json();
+        count = data.count || 0; 
+        counterDisplay.textContent = count; 
+        return count;
+    }
+    catch (error) {
         console.error('Error initializing counter:', error);
     }
 }
 
-function setConnectionStatus() {
+async function counterInitialAlert(){
+    try{
+        const initializedCount = await initializeCounter(); 
+        if(initializedCount == 0){
+            alert('Counter initialized'); 
+        }
+    }
+    catch (error) {
+        console.error('Counter not initialized');
+    }
+
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    counterInitialAlert();
+    setConnectionStatus();
+});
+
+
+async function setConnectionStatus() {
     // once server counter is initialized with data from server
     // set div with id connectionStatus text content to "Connected" 
     // and color to green
+    const connectionStatus = document.getElementById('connectionStatus');
+    if(!connectionStatus){
+        console.error('Connection Status Not Found');
+        return;
+    }
+
+    try{
+        const initializedCount = await initializeCounter();
+
+        if(initializedCount !== null){
+            connectionStatus.textContent = 'Connected';
+            connectionStatus.style.color = 'green';
+        }
+
+        else{
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.style.color = 'red';
+        }
+    }
+    catch(error){
+        console.error('Error setting connection status', error);
+        connectionStatus.textContent = 'Error';
+        connectionStatus.style.color = 'red'; 
+    }
 }
